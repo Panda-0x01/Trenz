@@ -8,6 +8,7 @@ import { Heart, MessageCircle, Share, Bookmark, MoreHorizontal, UserPlus, Trash2
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { User } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,7 +58,7 @@ export default function PostCard({
       try {
         const response = await api.getCurrentUser();
         if (response.success && response.data) {
-          setCurrentUser(response.data.user || response.data);
+          setCurrentUser(response.data as User);
         }
       } catch (error) {
         console.error('Failed to fetch current user:', error);

@@ -17,7 +17,11 @@ export async function GET(request: NextRequest) {
     }
 
     const searchTerm = query.trim();
-    const results = {
+    const results: {
+      posts: any[];
+      trends: any[];
+      users: any[];
+    } = {
       posts: [],
       trends: [],
       users: [],
@@ -33,22 +37,22 @@ export async function GET(request: NextRequest) {
             { isDeleted: false },
             {
               OR: [
-                { caption: { contains: searchTerm, mode: 'insensitive' } },
-                { textContent: { contains: searchTerm, mode: 'insensitive' } },
-                { imageAltText: { contains: searchTerm, mode: 'insensitive' } },
+                { caption: { contains: searchTerm } },
+                { textContent: { contains: searchTerm } },
+                { imageAltText: { contains: searchTerm } },
                 {
                   user: {
                     OR: [
-                      { username: { contains: searchTerm, mode: 'insensitive' } },
-                      { displayName: { contains: searchTerm, mode: 'insensitive' } },
+                      { username: { contains: searchTerm } },
+                      { displayName: { contains: searchTerm } },
                     ],
                   },
                 },
                 {
                   trend: {
                     OR: [
-                      { name: { contains: searchTerm, mode: 'insensitive' } },
-                      { hashtag: { contains: searchTerm, mode: 'insensitive' } },
+                      { name: { contains: searchTerm } },
+                      { hashtag: { contains: searchTerm } },
                     ],
                   },
                 },
@@ -97,9 +101,9 @@ export async function GET(request: NextRequest) {
       const trends = await prisma.trend.findMany({
         where: {
           OR: [
-            { name: { contains: searchTerm, mode: 'insensitive' } },
-            { hashtag: { contains: searchTerm, mode: 'insensitive' } },
-            { description: { contains: searchTerm, mode: 'insensitive' } },
+            { name: { contains: searchTerm } },
+            { hashtag: { contains: searchTerm } },
+            { description: { contains: searchTerm } },
           ],
         },
         include: {
@@ -126,9 +130,9 @@ export async function GET(request: NextRequest) {
       const users = await prisma.user.findMany({
         where: {
           OR: [
-            { username: { contains: searchTerm, mode: 'insensitive' } },
-            { displayName: { contains: searchTerm, mode: 'insensitive' } },
-            { bio: { contains: searchTerm, mode: 'insensitive' } },
+            { username: { contains: searchTerm } },
+            { displayName: { contains: searchTerm } },
+            { bio: { contains: searchTerm } },
           ],
         },
         select: {
@@ -175,10 +179,10 @@ export async function GET(request: NextRequest) {
       data: results,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Search error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error', details: error?.message || 'Unknown error' },
       { status: 500 }
     );
   }

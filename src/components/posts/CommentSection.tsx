@@ -51,7 +51,7 @@ export default function CommentSection({ postId, isOpen, onClose }: CommentSecti
       try {
         const response = await api.getCurrentUser();
         if (response.success && response.data) {
-          setCurrentUser(response.data.user || response.data);
+          setCurrentUser(response.data as User);
         }
       } catch (error) {
         console.error('Failed to fetch current user:', error);

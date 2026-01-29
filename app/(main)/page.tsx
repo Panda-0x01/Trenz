@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import PostCard from '@/src/components/posts/PostCard';
-import TrendCard from '@/src/components/trends/TrendCard';
-import { Post, Trend } from '@/src/types';
-import api from '@/src/lib/api';
+import PostCard from '@/components/posts/PostCard';
+import TrendCard from '@/components/trends/TrendCard';
+import { Post, Trend } from '@/types';
+import api from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function HomePage() {

@@ -1,4 +1,4 @@
-import { ApiResponse, PaginatedResponse } from '@/types';
+import { ApiResponse, PaginatedResponse, User, Post, Trend, Comment, Message, Story, LeaderboardEntry, SearchResults, AuthResponse, TokenRefreshResponse } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
@@ -36,8 +36,8 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
     
-    const headers: HeadersInit = {
-      ...options.headers,
+    const headers: Record<string, string> = {
+      ...(options.headers as Record<string, string> || {}),
     };
 
     // Only add Content-Type if not already set and not FormData
@@ -46,7 +46,7 @@ class ApiClient {
     }
 
     if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
+      headers['Authorization'] = `Bearer ${this.token}`;
     }
 
     try {
@@ -60,13 +60,13 @@ class ApiClient {
       // Handle 401 unauthorized - try to refresh token
       if (response.status === 401 && endpoint !== '/auth/refresh' && endpoint !== '/auth/login') {
         const refreshResult = await this.refreshToken();
-        if (refreshResult.success && refreshResult.data) {
+        if (refreshResult.success && refreshResult.data?.tokens) {
           // Update token and retry the original request
           this.setToken(refreshResult.data.tokens.accessToken);
           
           // Retry the original request with new token
-          const retryHeaders = { ...headers };
-          retryHeaders.Authorization = `Bearer ${refreshResult.data.tokens.accessToken}`;
+          const retryHeaders: Record<string, string> = { ...headers };
+          retryHeaders['Authorization'] = `Bearer ${refreshResult.data.tokens.accessToken}`;
           
           const retryResponse = await fetch(url, {
             ...options,
@@ -117,22 +117,22 @@ class ApiClient {
   }
 
   // Auth methods
-  async login(email: string, password: string) {
-    return this.request('/auth/login', {
+  async login(email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+    return this.request<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
   }
 
-  async register(username: string, email: string, password: string) {
-    return this.request('/auth/register', {
+  async register(username: string, email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+    return this.request<AuthResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ username, email, password }),
     });
   }
 
-  async getCurrentUser() {
-    return this.request('/auth/me');
+  async getCurrentUser(): Promise<ApiResponse<User>> {
+    return this.request<User>('/auth/me');
   }
 
   async logout() {
@@ -141,7 +141,7 @@ class ApiClient {
     return result;
   }
 
-  async refreshToken() {
+  async refreshToken(): Promise<ApiResponse<{ tokens: TokenRefreshResponse }>> {
     const refreshToken = typeof window !== 'undefined' 
       ? localStorage.getItem('refreshToken') 
       : null;
@@ -150,25 +150,25 @@ class ApiClient {
       return { success: false, error: 'No refresh token' };
     }
 
-    return this.request('/auth/refresh', {
+    return this.request<{ tokens: TokenRefreshResponse }>('/auth/refresh', {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     });
   }
 
   // User methods
-  async getUser(id: number) {
-    return this.request(`/users/${id}`);
+  async getUser(id: number): Promise<ApiResponse<User>> {
+    return this.request<User>(`/users/${id}`);
   }
 
-  async getUserByUsername(username: string) {
-    return this.request(`/users/username/${username}`);
+  async getUserByUsername(username: string): Promise<ApiResponse<User>> {
+    return this.request<User>(`/users/username/${username}`);
   }
 
-  async updateUser(id: number, data: any) {
+  async updateUser(id: number, data: any): Promise<ApiResponse<User>> {
     // Handle FormData for file uploads
     if (data instanceof FormData) {
-      return this.request(`/users/${id}`, {
+      return this.request<User>(`/users/${id}`, {
         method: 'PUT',
         body: data,
         // Don't set Content-Type for FormData, let browser set it
@@ -176,7 +176,7 @@ class ApiClient {
       });
     }
     
-    return this.request(`/users/${id}`, {
+    return this.request<User>(`/users/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -191,8 +191,8 @@ class ApiClient {
   }
 
   // Saved posts methods
-  async getSavedPosts(userId: number) {
-    return this.request(`/users/${userId}/saved`);
+  async getSavedPosts(userId: number): Promise<ApiResponse<Post[]>> {
+    return this.request<Post[]>(`/users/${userId}/saved`);
   }
 
   async savePost(userId: number, postId: number) {
@@ -210,8 +210,8 @@ class ApiClient {
   }
 
   // Blocked users methods
-  async getBlockedUsers(userId: number) {
-    return this.request(`/users/${userId}/blocked`);
+  async getBlockedUsers(userId: number): Promise<ApiResponse<User[]>> {
+    return this.request<User[]>(`/users/${userId}/blocked`);
   }
 
   async blockUser(userId: number, blockedUserId: number) {
@@ -229,12 +229,12 @@ class ApiClient {
   }
 
   // Posts methods
-  async getPosts(page = 1, limit = 20) {
-    return this.request<PaginatedResponse<any>>(`/posts?page=${page}&limit=${limit}`);
+  async getPosts(page = 1, limit = 20): Promise<ApiResponse<PaginatedResponse<Post>>> {
+    return this.request<PaginatedResponse<Post>>(`/posts?page=${page}&limit=${limit}`);
   }
 
-  async createPost(formData: FormData) {
-    return this.request('/posts', {
+  async createPost(formData: FormData): Promise<ApiResponse<Post>> {
+    return this.request<Post>('/posts', {
       method: 'POST',
       body: formData,
     });
@@ -253,36 +253,36 @@ class ApiClient {
   }
 
   // Trends methods
-  async getTrends() {
-    return this.request('/trends');
+  async getTrends(): Promise<ApiResponse<Trend[]>> {
+    return this.request<Trend[]>('/trends');
   }
 
-  async getTrendLeaderboard(trendId: number) {
-    return this.request(`/trends/${trendId}/leaderboard`);
+  async getTrendLeaderboard(trendId: number): Promise<ApiResponse<LeaderboardEntry[]>> {
+    return this.request<LeaderboardEntry[]>(`/trends/${trendId}/leaderboard`);
   }
 
   // Search methods
-  async search(query: string, type?: string) {
+  async search(query: string, type?: string): Promise<ApiResponse<SearchResults>> {
     const params = new URLSearchParams({ q: query });
     if (type) params.append('type', type);
     
-    return this.request(`/search/global?${params}`);
+    return this.request<SearchResults>(`/search/global?${params}`);
   }
 
   // Comments methods
-  async getComments(postId: number) {
-    return this.request(`/posts/${postId}/comments`);
+  async getComments(postId: number): Promise<ApiResponse<Comment[]>> {
+    return this.request<Comment[]>(`/posts/${postId}/comments`);
   }
 
-  async createComment(postId: number, content: string, parentCommentId?: number) {
-    return this.request(`/posts/${postId}/comments`, {
+  async createComment(postId: number, content: string, parentCommentId?: number): Promise<ApiResponse<Comment>> {
+    return this.request<Comment>(`/posts/${postId}/comments`, {
       method: 'POST',
       body: JSON.stringify({ content, parentCommentId }),
     });
   }
 
-  async updateComment(commentId: number, content: string) {
-    return this.request(`/comments/${commentId}`, {
+  async updateComment(commentId: number, content: string): Promise<ApiResponse<Comment>> {
+    return this.request<Comment>(`/comments/${commentId}`, {
       method: 'PUT',
       body: JSON.stringify({ content }),
     });
@@ -295,28 +295,28 @@ class ApiClient {
   }
 
   // Messages methods
-  async getConversations() {
-    return this.request('/messages/conversations');
+  async getConversations(): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>('/messages/conversations');
   }
 
-  async getMessages(userId: number) {
-    return this.request(`/messages/${userId}`);
+  async getMessages(userId: number): Promise<ApiResponse<Message[]>> {
+    return this.request<Message[]>(`/messages/${userId}`);
   }
 
-  async sendMessage(userId: number, content: string) {
-    return this.request(`/messages/${userId}`, {
+  async sendMessage(userId: number, content: string): Promise<ApiResponse<Message>> {
+    return this.request<Message>(`/messages/${userId}`, {
       method: 'POST',
       body: JSON.stringify({ content }),
     });
   }
 
   // Stories methods
-  async getStories() {
-    return this.request('/stories');
+  async getStories(): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>('/stories');
   }
 
-  async createStory(formData: FormData) {
-    return this.request('/stories', {
+  async createStory(formData: FormData): Promise<ApiResponse<Story>> {
+    return this.request<Story>('/stories', {
       method: 'POST',
       body: formData,
     });

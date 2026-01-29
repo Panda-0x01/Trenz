@@ -53,7 +53,7 @@ export interface Post {
   trend: Trend;
   _count?: {
     likes: number;
-    comments: number;
+    comments?: number;
   };
   isLiked?: boolean;
   isSaved?: boolean;
@@ -139,6 +139,19 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
   message?: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
+}
+
+export interface TokenRefreshResponse {
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface PaginatedResponse<T> {

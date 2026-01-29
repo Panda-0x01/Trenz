@@ -29,13 +29,13 @@ export default function SuggestionsSidebar({ currentUser }: SuggestionsSidebarPr
       // Try to get real user suggestions from API
       const response = await api.request('/users/suggestions');
       if (response.success && response.data) {
-        setSuggestions(response.data.slice(0, 5)); // Show max 5 suggestions
+        setSuggestions((response.data as any[]).slice(0, 5)); // Show max 5 suggestions
       } else {
         // Fallback to getting recent users if suggestions API doesn't exist
         const usersResponse = await api.request('/users?limit=5');
         if (usersResponse.success && usersResponse.data) {
           // Filter out current user
-          const filteredUsers = usersResponse.data.filter((user: UserType) => 
+          const filteredUsers = (usersResponse.data as any[]).filter((user: UserType) => 
             user.id !== currentUser?.id
           ).slice(0, 5);
           setSuggestions(filteredUsers);

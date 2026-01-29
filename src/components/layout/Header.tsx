@@ -47,7 +47,7 @@ export default function Header({ user }: HeaderProps) {
     try {
       const response = await api.request('/notifications');
       if (response.success && response.data) {
-        setNotifications(response.data);
+        setNotifications(response.data as any[]);
       } else {
         setNotifications([]);
       }

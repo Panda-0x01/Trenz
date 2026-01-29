@@ -32,9 +32,9 @@ export default function ProfilePage() {
     try {
       // Get current user to check if this is their own profile
       const currentUserResponse = await api.getCurrentUser();
-      const currentUser = currentUserResponse.success ? (currentUserResponse.data?.user || currentUserResponse.data) : null;
+      const currentUser = currentUserResponse.success ? (currentUserResponse.data as User) : null;
       const isOwnProfile = currentUser && currentUser.username === username;
-      setIsCurrentUser(isOwnProfile);
+      setIsCurrentUser(isOwnProfile || false);
 
       if (isOwnProfile) {
         // Show current user's profile with real data

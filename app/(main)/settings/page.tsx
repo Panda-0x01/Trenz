@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Settings, User, Lock, Bookmark, Bell, Palette, LogOut, Save, Camera, Upload, X, Shield, Eye, EyeOff, Users, MessageSquare, Heart, UserX, HelpCircle, FileText, Video, Type } from 'lucide-react';
+import { Settings, User as UserIcon, Lock, Bookmark, Bell, Palette, LogOut, Save, Camera, Upload, X, Shield, Eye, EyeOff, Users, MessageSquare, Heart, UserX, HelpCircle, FileText, Video, Type } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -66,7 +66,7 @@ export default function SettingsPage() {
     try {
       const response = await api.getCurrentUser();
       if (response.success && response.data) {
-        const currentUser = response.data.user || response.data;
+        const currentUser = response.data as UserType;
         console.log('Loaded user data:', currentUser);
         setUser(currentUser);
         setDisplayName(currentUser.displayName || '');
@@ -338,7 +338,7 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-                <User className="h-4 w-4 md:h-5 md:w-5" />
+                <UserIcon className="h-4 w-4 md:h-5 md:w-5" />
                 Your Account
               </CardTitle>
               <CardDescription className="text-sm">

@@ -8,10 +8,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import PostCard from '@/components/posts/PostCard';
 import TrendCard from '@/components/trends/TrendCard';
 import CreateTrendCard from '@/components/trends/CreateTrendCard';
+import { User, Post, Trend, Story } from '@/types';
 import StoryRing from '@/components/stories/StoryRing';
 import StoryViewer from '@/components/stories/StoryViewer';
 import CreateStoryModal from '@/components/stories/CreateStoryModal';
-import { Post, Trend, Story } from '@/types';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { useConfirmation } from '@/hooks/useConfirmation';
@@ -40,7 +40,7 @@ export default function HomePage() {
     try {
       const response = await api.getCurrentUser();
       if (response.success && response.data) {
-        setCurrentUser(response.data.user || response.data);
+        setCurrentUser(response.data as User);
       }
     } catch (error) {
       console.error('Failed to load current user');

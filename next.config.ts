@@ -33,6 +33,9 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
   
+  // Turbopack configuration - empty object to silence webpack warning
+  turbopack: {},
+  
   // Headers for security and performance
   async headers() {
     return [
@@ -76,23 +79,6 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
-  },
-  
-  // Webpack optimizations
-  webpack: (config, { dev, isServer }) => {
-    if (!dev && !isServer) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-          },
-        },
-      };
-    }
-    return config;
   },
 };
 

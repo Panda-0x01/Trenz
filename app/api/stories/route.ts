@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
     } catch (validationError) {
       console.error('Validation error:', validationError);
       return NextResponse.json(
-        { error: 'Invalid input data', details: validationError.errors },
+        { error: 'Invalid input data', details: (validationError as any)?.issues || 'Validation failed' },
         { status: 400 }
       );
     }
@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
       } catch (dbError) {
         console.error('Database error creating text story:', dbError);
         return NextResponse.json(
-          { error: 'Failed to save story to database', details: dbError.message },
+          { error: 'Failed to save story to database', details: (dbError as Error)?.message || 'Unknown database error' },
           { status: 500 }
         );
       }
@@ -286,7 +286,7 @@ export async function POST(request: NextRequest) {
       } catch (fileError) {
         console.error('File processing error:', fileError);
         return NextResponse.json(
-          { error: 'Failed to process image file', details: fileError.message },
+          { error: 'Failed to process image file', details: (fileError as Error)?.message || 'Unknown file error' },
           { status: 500 }
         );
       }
@@ -337,7 +337,7 @@ export async function POST(request: NextRequest) {
       } catch (fileError) {
         console.error('File processing error:', fileError);
         return NextResponse.json(
-          { error: 'Failed to process video file', details: fileError.message },
+          { error: 'Failed to process video file', details: (fileError as Error)?.message || 'Unknown file error' },
           { status: 500 }
         );
       }
@@ -393,26 +393,26 @@ export async function POST(request: NextRequest) {
     } catch (dbError) {
       console.error('Database error:', dbError);
       return NextResponse.json(
-        { error: 'Failed to save story to database', details: dbError.message },
+        { error: 'Failed to save story to database', details: (dbError as Error)?.message || 'Unknown database error' },
         { status: 500 }
       );
     }
 
   } catch (error) {
     console.error('=== Story Creation Error ===');
-    console.error('Error type:', error.constructor.name);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
+    console.error('Error type:', (error as Error)?.constructor?.name || 'Unknown');
+    console.error('Error message:', (error as Error)?.message || 'Unknown error');
+    console.error('Error stack:', (error as Error)?.stack || 'No stack trace');
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Invalid input data', details: error.issues },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error', details: (error as Error)?.message || 'Unknown error' },
       { status: 500 }
     );
   }

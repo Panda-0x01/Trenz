@@ -4,7 +4,7 @@ import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const user = await getUserFromRequest(request);
@@ -12,8 +12,9 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
+    const resolvedParams = await params;
     const currentUserId = user.id;
-    const otherUserId = parseInt(params.userId);
+    const otherUserId = parseInt(resolvedParams.userId);
 
     // Get all messages between the two users
     const messages = await prisma.message.findMany({
@@ -74,7 +75,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const user = await getUserFromRequest(request);
@@ -82,8 +83,9 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
+    const resolvedParams = await params;
     const senderId = user.id;
-    const recipientId = parseInt(params.userId);
+    const recipientId = parseInt(resolvedParams.userId);
     const { content, messageType = 'TEXT' } = await request.json();
 
     if (!content || !content.trim()) {

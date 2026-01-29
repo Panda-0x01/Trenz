@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
             await unlink(imagePath);
             console.log(`Deleted image file: ${story.imageUrl}`);
           } catch (fileError) {
-            console.warn(`Failed to delete image file ${story.imageUrl}:`, fileError.message);
+            console.warn(`Failed to delete image file ${story.imageUrl}:`, (fileError as Error)?.message || 'Unknown error');
             fileDeleteErrors++;
           }
         }
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
             await unlink(videoPath);
             console.log(`Deleted video file: ${story.videoUrl}`);
           } catch (fileError) {
-            console.warn(`Failed to delete video file ${story.videoUrl}:`, fileError.message);
+            console.warn(`Failed to delete video file ${story.videoUrl}:`, (fileError as Error)?.message || 'Unknown error');
             fileDeleteErrors++;
           }
         }
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Story cleanup error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error', details: (error as Error)?.message || 'Unknown error' },
       { status: 500 }
     );
   }

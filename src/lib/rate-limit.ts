@@ -33,7 +33,7 @@ class RateLimiter {
   private getKey(req: NextRequest): string {
     // Use IP address or user ID for rate limiting
     const forwarded = req.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : req.ip || 'unknown';
+    const ip = forwarded ? forwarded.split(',')[0] : req.headers.get('x-real-ip') || 'unknown';
     return ip;
   }
 
@@ -91,7 +91,7 @@ export function rateLimit(limiter: RateLimiter) {
 
 export function getRateLimitHeaders(req: NextRequest, limiter: RateLimiter) {
   return {
-    'X-RateLimit-Limit': limiter.maxRequests.toString(),
+    'X-RateLimit-Limit': (limiter as any).maxRequests.toString(),
     'X-RateLimit-Remaining': limiter.getRemainingRequests(req).toString(),
     'X-RateLimit-Reset': Math.ceil(limiter.getResetTime(req) / 1000).toString(),
   };

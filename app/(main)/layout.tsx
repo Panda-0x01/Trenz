@@ -32,25 +32,25 @@ export default function MainLayout({
         const response = await api.request('/auth/me');
         
         if (response.success && response.data) {
-          setUser(response.data);
+          setUser(response.data as User);
           // Store current user globally
           if (typeof window !== 'undefined') {
-            window.currentUser = response.data;
+            (window as any).currentUser = response.data;
           }
         } else {
           // Try to refresh token
           const refreshResponse = await api.refreshToken();
           
-          if (refreshResponse.success && refreshResponse.data) {
-            api.setToken(refreshResponse.data.accessToken);
-            localStorage.setItem('refreshToken', refreshResponse.data.refreshToken);
+          if (refreshResponse.success && refreshResponse.data?.tokens) {
+            api.setToken(refreshResponse.data.tokens.accessToken);
+            localStorage.setItem('refreshToken', refreshResponse.data.tokens.refreshToken);
             
             // Retry getting user info
             const userResponse = await api.request('/auth/me');
             if (userResponse.success && userResponse.data) {
-              setUser(userResponse.data);
+              setUser(userResponse.data as User);
               if (typeof window !== 'undefined') {
-                window.currentUser = userResponse.data;
+                (window as any).currentUser = userResponse.data;
               }
             } else {
               router.push('/login');
@@ -81,13 +81,13 @@ export default function MainLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Header */}
-      <MobileHeader user={user} showSearch={true} />
+      <MobileHeader user={user || undefined} showSearch={true} />
 
       {/* Desktop Layout (lg and above) */}
       <div className="lg:flex">
         {/* Left Sidebar - Desktop only */}
         <div className="hidden lg:block">
-          <Sidebar user={user} />
+          <Sidebar user={user || undefined} />
         </div>
         
         {/* Main Content Area */}
@@ -101,13 +101,13 @@ export default function MainLayout({
         
         {/* Right Sidebar - Desktop only */}
         <div className="hidden lg:block">
-          <SuggestionsSidebar currentUser={user} />
+          <SuggestionsSidebar currentUser={user || undefined} />
         </div>
       </div>
 
       {/* Tablet Layout (md to lg) */}
       <div className="hidden md:block lg:hidden">
-        <Sidebar user={user} isCollapsed={true} />
+        <Sidebar user={user || undefined} isCollapsed={true} />
         <div className="pl-20">
           <main className="min-h-screen pb-16">
             <div className="max-w-3xl mx-auto py-6 px-4">
@@ -119,7 +119,7 @@ export default function MainLayout({
 
       {/* Mobile Bottom Navigation */}
       <div className="lg:hidden">
-        <MobileNavigation user={user} />
+        <MobileNavigation user={user || undefined} />
       </div>
     </div>
   );

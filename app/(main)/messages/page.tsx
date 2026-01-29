@@ -51,9 +51,9 @@ export default function MessagesPage() {
     try {
       const response = await api.request('/messages/conversations');
       if (response.success && response.data) {
-        setConversations(response.data);
-        if (response.data.length > 0) {
-          setSelectedConversation(response.data[0]);
+        setConversations(response.data as Conversation[]);
+        if ((response.data as any[]).length > 0) {
+          setSelectedConversation((response.data as any[])[0]);
         }
       } else {
         setConversations([]);
@@ -70,7 +70,7 @@ export default function MessagesPage() {
     try {
       const response = await api.request(`/messages/${userId}`);
       if (response.success && response.data) {
-        setMessages(response.data);
+        setMessages(response.data as Message[]);
       } else {
         setMessages([]);
       }
@@ -94,8 +94,8 @@ export default function MessagesPage() {
         })
       });
 
-      if (response.success) {
-        setMessages(prev => [...prev, response.data]);
+      if (response.success && response.data) {
+        setMessages(prev => [...prev, response.data as Message]);
         setNewMessage('');
         toast.success('Message sent!');
       } else {
