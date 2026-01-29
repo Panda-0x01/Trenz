@@ -1,0 +1,284 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int      @id @default(autoincrement())
+  username         String   @unique @db.VarChar(50)
+  email            String   @unique @db.VarChar(255)
+  passwordHash     String   @map("password_hash") @db.VarChar(255)
+  displayName      String?  @map("display_name") @db.VarChar(100)
+  bio              String?  @db.Text
+  profileImageUrl  String?  @map("profile_image_url") @db.VarChar(500)
+  headerImageUrl   String?  @map("header_image_url") @db.VarChar(500)
+  isPrivate        Boolean  @default(false) @map("is_private")
+  isVerified       Boolean  @default(false) @map("is_verified")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  posts            Post[]
+  stories          Story[]
+  likes            Like[]
+  comments         Comment[]
+  followers        Follow[] @relation("UserFollowers")
+  following        Follow[] @relation("UserFollowing")
+  trendWins        TrendWinner[]
+  interests        UserInterest[]
+  sentMessages     Message[] @relation("MessageSender")
+  receivedMessages Message[] @relation("MessageRecipient")
+  reports          Report[] @relation("ReportReporter")
+  reportedBy       Report[] @relation("ReportedUser")
+  createdTrends    Trend[]
+
+  @@map("users")
+}
+
+model Trend {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  hashtag     String   @unique @db.VarChar(50)
+  startDate   DateTime @map("start_date")
+  endDate     DateTime @map("end_date")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdBy   Int?     @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  creator User?         @relation(fields: [createdBy], references: [id])
+  posts   Post[]
+  winners TrendWinner[]
+
+  @@index([hashtag])
+  @@index([isActive, startDate, endDate])
+  @@map("trends")
+}
+
+model Post {
+  id                 Int      @id @default(autoincrement())
+  userId             Int      @map("user_id")
+  trendId            Int      @map("trend_id")
+  postType           PostType @default(IMAGE) @map("post_type")
+  caption            String?  @db.Text
+  textContent        String?  @map("text_content") @db.Text
+  imageUrl           String?  @map("image_url") @db.VarChar(500)
+  videoUrl           String?  @map("video_url") @db.VarChar(500)
+  imageAltText       String?  @map("image_alt_text") @db.VarChar(255)
+  videoDuration      Int?     @map("video_duration") // Duration in seconds
+  hideLikeCount      Boolean  @default(false) @map("hide_like_count")
+  hideCommentCount   Boolean  @default(false) @map("hide_comment_count")
+  isDeleted          Boolean  @default(false) @map("is_deleted")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id])
+  trend        Trend         @relation(fields: [trendId], references: [id])
+  likes        Like[]
+  comments     Comment[]
+  trendWins    TrendWinner[]
+  sharedInMessages Message[]
+  reports      Report[]
+
+  @@index([userId, trendId])
+  @@index([trendId, createdAt])
+  @@index([createdAt])
+  @@map("posts")
+}
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  followerId  Int      @map("follower_id")
+  followingId Int      @map("following_id")
+  status      FollowStatus @default(ACCEPTED)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  follower  User @relation("UserFollowers", fields: [followerId], references: [id])
+  following User @relation("UserFollowing", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@index([status])
+  @@map("follows")
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([postId, createdAt])
+  @@map("likes")
+}
+
+model Comment {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @map("user_id")
+  postId          Int      @map("post_id")
+  parentCommentId Int?     @map("parent_comment_id")
+  content         String   @db.Text
+  isDeleted       Boolean  @default(false) @map("is_deleted")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+  post          Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentComment Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies       Comment[] @relation("CommentReplies")
+
+  @@index([postId, createdAt])
+  @@index([parentCommentId])
+  @@map("comments")
+}
+
+model TrendWinner {
+  id           Int      @id @default(autoincrement())
+  trendId      Int      @map("trend_id")
+  userId       Int      @map("user_id")
+  postId       Int      @map("post_id")
+  rankPosition Int      @map("rank_position")
+  finalScore   Decimal  @map("final_score") @db.Decimal(10, 2)
+  awardedAt    DateTime @default(now()) @map("awarded_at")
+
+  // Relations
+  trend Trend @relation(fields: [trendId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+  post  Post  @relation(fields: [postId], references: [id])
+
+  @@unique([trendId, rankPosition])
+  @@index([userId, awardedAt])
+  @@map("trend_winners")
+}
+
+model UserInterest {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @map("user_id")
+  interestCategory String   @map("interest_category") @db.VarChar(50)
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, interestCategory])
+  @@index([interestCategory])
+  @@map("user_interests")
+}
+
+model Message {
+  id           Int         @id @default(autoincrement())
+  senderId     Int         @map("sender_id")
+  recipientId  Int         @map("recipient_id")
+  content      String?     @db.Text
+  sharedPostId Int?        @map("shared_post_id")
+  messageType  MessageType @default(TEXT) @map("message_type")
+  isRead       Boolean     @default(false) @map("is_read")
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  // Relations
+  sender     User  @relation("MessageSender", fields: [senderId], references: [id])
+  recipient  User  @relation("MessageRecipient", fields: [recipientId], references: [id])
+  sharedPost Post? @relation(fields: [sharedPostId], references: [id])
+
+  @@index([senderId, recipientId, createdAt])
+  @@index([recipientId, isRead, createdAt])
+  @@map("messages")
+}
+
+model Report {
+  id             Int        @id @default(autoincrement())
+  reporterId     Int        @map("reporter_id")
+  reportedUserId Int?       @map("reported_user_id")
+  reportedPostId Int?       @map("reported_post_id")
+  reportType     ReportType @map("report_type")
+  description    String?    @db.Text
+  status         ReportStatus @default(PENDING)
+  createdAt      DateTime   @default(now()) @map("created_at")
+  resolvedAt     DateTime?  @map("resolved_at")
+
+  // Relations
+  reporter     User  @relation("ReportReporter", fields: [reporterId], references: [id])
+  reportedUser User? @relation("ReportedUser", fields: [reportedUserId], references: [id])
+  reportedPost Post? @relation(fields: [reportedPostId], references: [id])
+
+  @@index([status])
+  @@index([reportType])
+  @@map("reports")
+}
+
+model Story {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  storyType   StoryType @default(IMAGE) @map("story_type")
+  content     String?   @db.Text
+  imageUrl    String?   @map("image_url") @db.VarChar(500)
+  videoUrl    String?   @map("video_url") @db.VarChar(500)
+  duration    Int?      // Duration in seconds for video stories
+  isActive    Boolean   @default(true) @map("is_active")
+  expiresAt   DateTime  @map("expires_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive, expiresAt])
+  @@index([isActive, expiresAt])
+  @@map("stories")
+}
+
+enum StoryType {
+  IMAGE
+  VIDEO
+  TEXT
+}
+
+enum FollowStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum PostType {
+  IMAGE
+  VIDEO
+  TEXT
+}
+
+enum MessageType {
+  TEXT
+  POST_SHARE
+}
+
+enum ReportType {
+  SPAM
+  HARASSMENT
+  INAPPROPRIATE_CONTENT
+  FAKE_ACCOUNT
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
