@@ -4,6 +4,8 @@ import { AlertTriangle, Info, CheckCircle, XCircle, Trash2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
@@ -38,6 +40,16 @@ export default function ConfirmationDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-sm p-0 gap-0 rounded-2xl border-0 shadow-2xl">
+        {/* Accessible title for screen readers */}
+        <DialogTitle className="sr-only">
+          {title || (isDestructive ? 'Confirmation Required' : 'Information')}
+        </DialogTitle>
+        
+        {/* Accessible description for screen readers */}
+        <DialogDescription className="sr-only">
+          {message}
+        </DialogDescription>
+
         {/* Header with icon and title */}
         <div className="flex flex-col items-center text-center p-6 pb-4">
           {isDestructive ? (
