@@ -9,7 +9,8 @@ import {
   Film, 
   User,
   Plus,
-  Trophy
+  Trophy,
+  PlayCircle
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,11 @@ export default function MobileNavigation({ user }: MobileNavigationProps) {
       icon: Search,
     },
     {
+      name: 'Stories',
+      href: '/stories',
+      icon: PlayCircle,
+    },
+    {
       name: 'Create',
       href: '/create',
       icon: Plus,
@@ -42,11 +48,6 @@ export default function MobileNavigation({ user }: MobileNavigationProps) {
       name: 'Reels',
       href: '/trends',
       icon: Film,
-    },
-    {
-      name: 'Leaderboard',
-      href: '/leaderboard',
-      icon: Trophy,
     },
   ];
 

@@ -17,7 +17,8 @@ import {
   Settings,
   TrendingUp,
   AlignJustify,
-  Trophy
+  Trophy,
+  PlayCircle
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -68,6 +69,11 @@ export default function Sidebar({ user, isCollapsed: forceCollapsed }: SidebarPr
       name: 'Explore',
       href: '/explore',
       icon: Compass,
+    },
+    {
+      name: 'Stories',
+      href: '/stories',
+      icon: PlayCircle,
     },
     {
       name: 'Reels',
