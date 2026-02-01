@@ -22,6 +22,19 @@ export default function StoriesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
 
+  // Helper function to safely format dates
+  const safeFormatDate = (dateString: string | Date) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Recently';
+      }
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (error) {
+      return 'Recently';
+    }
+  };
+
   useEffect(() => {
     loadCurrentUser();
     loadStories();
@@ -48,6 +61,12 @@ export default function StoriesPage() {
         const groupedStories: { [key: number]: StoryGroup } = {};
         
         (response.data as any[]).forEach((story: any) => {
+          // Validate story data
+          if (!story || !story.userId || !story.user) {
+            console.warn('Invalid story data:', story);
+            return;
+          }
+
           if (!groupedStories[story.userId]) {
             groupedStories[story.userId] = {
               user: story.user,
@@ -59,9 +78,20 @@ export default function StoriesPage() {
 
         // Convert to array and sort by most recent story
         const storyGroupsArray = Object.values(groupedStories).sort((a, b) => {
-          const aLatest = Math.max(...a.stories.map(s => new Date(s.createdAt).getTime()));
-          const bLatest = Math.max(...b.stories.map(s => new Date(s.createdAt).getTime()));
-          return bLatest - aLatest;
+          try {
+            const aLatest = Math.max(...a.stories.map(s => {
+              const date = new Date(s.createdAt);
+              return isNaN(date.getTime()) ? 0 : date.getTime();
+            }));
+            const bLatest = Math.max(...b.stories.map(s => {
+              const date = new Date(s.createdAt);
+              return isNaN(date.getTime()) ? 0 : date.getTime();
+            }));
+            return bLatest - aLatest;
+          } catch (error) {
+            console.warn('Error sorting stories:', error);
+            return 0;
+          }
         });
 
         setStoryGroups(storyGroupsArray);
@@ -187,7 +217,7 @@ export default function StoriesPage() {
                         {group.user.displayName || group.user.username}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {formatDistanceToNow(new Date(latestStory.createdAt), { addSuffix: true })}
+                        {safeFormatDate(latestStory.createdAt)}
                       </p>
                     </div>
                   </div>
@@ -289,7 +319,7 @@ export default function StoriesPage() {
                             {currentGroup.user.displayName || currentGroup.user.username}
                           </p>
                           <p className="text-white/70 text-xs">
-                            {formatDistanceToNow(new Date(currentStory.createdAt), { addSuffix: true })}
+                            {safeFormatDate(currentStory.createdAt)}
                           </p>
                         </div>
                       </div>
